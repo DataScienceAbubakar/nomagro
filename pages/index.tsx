@@ -39,6 +39,7 @@ export default function HomePage() {
           <div className="space-x-4">
             <Link href="/" className="hover:text-green-300">Home</Link>
             <Link href="/login" className="hover:text-green-300">Login</Link>
+            <Link href="/farm" className="hover:text-green-300">NOMAFARM</Link>
             <Link href="/dashboard" className="hover:text-green-00">Dashboard</Link>
             <Link href="/blog" className="hover:text-green-300">Blog</Link>
           </div>
