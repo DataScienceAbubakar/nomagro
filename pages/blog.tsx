@@ -56,7 +56,7 @@ export default function BlogPage() {
               <img 
                 src="/images/logo.png" 
                 alt="Nomagro Logo" 
-                className="h-8 md:h-10 w-auto logo-float logo-glow cursor-pointer" 
+                className="h-16 md:h-22 w-auto logo-float logo-glow cursor-pointer" 
               />
             </Link>
           </div>

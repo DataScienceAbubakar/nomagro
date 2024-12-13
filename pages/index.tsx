@@ -33,14 +33,14 @@ export default function HomePage() {
             <img 
               src="/images/logo.png" 
               alt="Nomagro Logo" 
-              className="h-8 md:h-10 w-auto logo-float logo-glow cursor-pointer" 
+              className="h-16 md:h-22 w-auto logo-float logo-glow cursor-pointer" 
             />
           </div>
           <div className="space-x-4">
-            <Link href="/" className="hover:text-green-200">Home</Link>
-            <Link href="/login" className="hover:text-green-200">Login</Link>
-            <Link href="/dashboard" className="hover:text-green-200">Dashboard</Link>
-            <Link href="/blog" className="hover:text-green-200">Blog</Link>
+            <Link href="/" className="hover:text-green-300">Home</Link>
+            <Link href="/login" className="hover:text-green-300">Login</Link>
+            <Link href="/dashboard" className="hover:text-green-00">Dashboard</Link>
+            <Link href="/blog" className="hover:text-green-300">Blog</Link>
           </div>
         </div>
       </nav>
