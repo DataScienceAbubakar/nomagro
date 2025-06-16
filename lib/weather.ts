@@ -25,7 +25,7 @@ export async function getForecast(lat: number, lon: number) {
   try {
     // Call your Python backend for Prophet-based forecasting
     const response = await fetch(`${PYTHON_BACKEND_URL}/forecast`, {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
