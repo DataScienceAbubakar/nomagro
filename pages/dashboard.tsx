@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { 
@@ -11,20 +11,97 @@ import {
   LogOut,
   TrendingUp,
   BarChart,
-  Sun
+  Sun,
+  Loader
 } from 'lucide-react';
 
+interface WeatherData {
+  day: string;
+  temperature: number;
+  rainfall: number;
+  humidity: number;
+  windSpeed: number;
+  description: string;
+}
+
+interface CurrentWeather {
+  temperature: number;
+  humidity: number;
+  windSpeed: number;
+  rainfall: number;
+  description: string;
+}
+
 export default function DashboardPage() {
-  // Sample weather data
-  const weatherData = [
-    { day: 'Mon', temperature: 28, rainfall: 20, humidity: 65 },
-    { day: 'Tue', temperature: 30, rainfall: 10, humidity: 60 },
-    { day: 'Wed', temperature: 29, rainfall: 15, humidity: 68 },
-    { day: 'Thu', temperature: 27, rainfall: 25, humidity: 75 },
-    { day: 'Fri', temperature: 31, rainfall: 5, humidity: 55 },
-    { day: 'Sat', temperature: 30, rainfall: 12, humidity: 62 },
-    { day: 'Sun', temperature: 28, rainfall: 18, humidity: 70 },
-  ];
+  const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
+  const [currentWeather, setCurrentWeather] = useState<CurrentWeather | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Kano coordinates - you can make this dynamic later
+  const KANO_LAT = 12.0022;
+  const KANO_LON = 8.5920;
+
+  useEffect(() => {
+    fetchWeatherData();
+  }, []);
+
+  const fetchWeatherData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch forecast data from your Next.js API
+      const forecastResponse = await fetch(`/api/weather/forecast?lat=${KANO_LAT}&lon=${KANO_LON}`);
+      if (!forecastResponse.ok) {
+        throw new Error('Failed to fetch forecast data');
+      }
+      const forecastData = await forecastResponse.json();
+
+      // Fetch current weather
+      const weatherResponse = await fetch(`/api/weather/current?lat=${KANO_LAT}&lon=${KANO_LON}`);
+      if (!weatherResponse.ok) {
+        throw new Error('Failed to fetch current weather');
+      }
+      const currentData = await weatherResponse.json();
+
+      setWeatherData(forecastData);
+      setCurrentWeather(currentData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
+      console.error('Weather fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="h-8 w-8 animate-spin mx-auto mb-4 text-green-600" />
+          <p className="text-gray-600">Loading weather data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="h-8 w-8 mx-auto mb-4 text-red-500" />
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={fetchWeatherData}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -56,6 +133,13 @@ export default function DashboardPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Farm Dashboard</h1>
           <p className="text-gray-600">Kano State, Nigeria | {new Date().toLocaleDateString()}</p>
+          <button 
+            onClick={fetchWeatherData}
+            className="mt-2 text-sm text-green-600 hover:text-green-800 flex items-center gap-1"
+          >
+            <TrendingUp className="h-4 w-4" />
+            Refresh Data
+          </button>
         </div>
 
         {/* Weather Overview Cards */}
@@ -67,12 +151,14 @@ export default function DashboardPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-500">Temperature</p>
-                <p className="text-2xl font-bold">28°C</p>
+                <p className="text-2xl font-bold">
+                  {currentWeather ? `${Math.round(currentWeather.temperature)}°C` : '--°C'}
+                </p>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm text-gray-500">
               <TrendingUp className="h-4 w-4 mr-1" />
-              <span>2°C higher than yesterday</span>
+              <span>{currentWeather?.description || 'Loading...'}</span>
             </div>
           </div>
 
@@ -83,12 +169,14 @@ export default function DashboardPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-500">Rainfall</p>
-                <p className="text-2xl font-bold">2.5mm</p>
+                <p className="text-2xl font-bold">
+                  {currentWeather ? `${currentWeather.rainfall.toFixed(1)}mm` : '--mm'}
+                </p>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm text-gray-500">
               <BarChart className="h-4 w-4 mr-1" />
-              <span>Expected to increase</span>
+              <span>AI Forecast Active</span>
             </div>
           </div>
 
@@ -99,7 +187,9 @@ export default function DashboardPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-500">Humidity</p>
-                <p className="text-2xl font-bold">65%</p>
+                <p className="text-2xl font-bold">
+                  {currentWeather ? `${currentWeather.humidity}%` : '--%'}
+                </p>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm text-gray-500">
@@ -115,7 +205,9 @@ export default function DashboardPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm text-gray-500">Wind Speed</p>
-                <p className="text-2xl font-bold">12km/h</p>
+                <p className="text-2xl font-bold">
+                  {currentWeather ? `${currentWeather.windSpeed.toFixed(1)}km/h` : '--km/h'}
+                </p>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm text-gray-500">
@@ -127,7 +219,10 @@ export default function DashboardPage() {
 
         {/* Weather Chart */}
         <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
-          <h2 className="text-xl font-semibold mb-6">Weekly Weather Forecast</h2>
+          <h2 className="text-xl font-semibold mb-6">
+            AI-Powered Weather Forecast 
+            <span className="text-sm font-normal text-gray-500 ml-2">(Prophet Model)</span>
+          </h2>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={weatherData}>
@@ -196,32 +291,34 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Alerts */}
+          {/* Dynamic Alerts based on forecast */}
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Alerts & Notifications</h2>
+              <h2 className="text-xl font-semibold">AI Alerts & Notifications</h2>
               <AlertTriangle className="h-5 w-5 text-gray-500" />
             </div>
             <div className="space-y-4">
-              <div className="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
-                <div className="flex items-start">
-                  <AlertTriangle className="h-5 w-5 text-yellow-400 mt-0.5" />
-                  <div className="ml-3">
-                    <h3 className="font-medium text-yellow-800">Heavy Rainfall Expected</h3>
-                    <p className="text-sm text-yellow-700 mt-1">
-                      Prepare for heavy rainfall in the next 48 hours. Consider protecting sensitive crops.
-                    </p>
+              {weatherData.length > 0 && weatherData[0]?.rainfall > 10 && (
+                <div className="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                  <div className="flex items-start">
+                    <AlertTriangle className="h-5 w-5 text-yellow-400 mt-0.5" />
+                    <div className="ml-3">
+                      <h3 className="font-medium text-yellow-800">Heavy Rainfall Expected</h3>
+                      <p className="text-sm text-yellow-700 mt-1">
+                        AI forecast predicts {weatherData[0].rainfall.toFixed(1)}mm rainfall. Consider protecting sensitive crops.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="p-4 bg-green-50 border-l-4 border-green-400 rounded">
                 <div className="flex items-start">
                   <Cloud className="h-5 w-5 text-green-400 mt-0.5" />
                   <div className="ml-3">
-                    <h3 className="font-medium text-green-800">Optimal Planting Conditions</h3>
+                    <h3 className="font-medium text-green-800">AI-Powered Forecasting</h3>
                     <p className="text-sm text-green-700 mt-1">
-                      Current weather conditions are ideal for maize planting. Consider starting within the next week.
+                      Using Prophet machine learning model for accurate rainfall predictions based on historical data.
                     </p>
                   </div>
                 </div>
@@ -231,9 +328,9 @@ export default function DashboardPage() {
                 <div className="flex items-start">
                   <Droplet className="h-5 w-5 text-blue-400 mt-0.5" />
                   <div className="ml-3">
-                    <h3 className="font-medium text-blue-800">Irrigation Reminder</h3>
+                    <h3 className="font-medium text-blue-800">Smart Irrigation Reminder</h3>
                     <p className="text-sm text-blue-700 mt-1">
-                      Schedule irrigation for your cassava field based on current soil moisture levels.
+                      Based on forecast data, schedule irrigation accordingly to optimize water usage.
                     </p>
                   </div>
                 </div>

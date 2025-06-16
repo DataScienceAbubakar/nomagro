@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getForecast } from '../../../lib/weather';
+import { getCurrentWeather } from '../../../lib/weather';
 
 export default async function handler(
   req: NextApiRequest,
@@ -23,10 +23,10 @@ export default async function handler(
       return res.status(400).json({ message: 'Invalid coordinates' });
     }
 
-    const forecast = await getForecast(latitude, longitude);
-    res.status(200).json(forecast);
+    const weather = await getCurrentWeather(latitude, longitude);
+    res.status(200).json(weather);
   } catch (error) {
-    console.error('Forecast error:', error);
-    res.status(500).json({ message: 'Error fetching forecast data' });
+    console.error('Current weather error:', error);
+    res.status(500).json({ message: 'Error fetching current weather data' });
   }
 }
