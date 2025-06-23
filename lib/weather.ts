@@ -4,21 +4,10 @@ const BACKEND_URL = process.env.NODE_ENV === 'production'
   ? 'https://nomagro.railway.app'  // Railway URL
   : 'http://localhost:8000';             // Local development
 
-export async function getForecast(lat: number, lon: number) {
-  const response = await fetch(`${BACKEND_URL}/forecast?days=7`);
-  return response.json();
-}
-    return {
-      temperature: data.main.temp,
-      humidity: data.main.humidity,
-      windSpeed: data.wind.speed,
-      description: data.weather[0].description,
-      rainfall: data.rain ? data.rain['1h'] : 0
-    };
-  } catch (error) {
-    throw new Error('Failed to fetch weather data');
-  }
-}
+// You also need to define PYTHON_BACKEND_URL
+const PYTHON_BACKEND_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://nomagro.railway.app'  // Railway URL
+  : 'http://localhost:8000';             // Local development
 
 // Updated to call your Python backend
 export async function getForecast(lat: number, lon: number) {
@@ -35,11 +24,9 @@ export async function getForecast(lat: number, lon: number) {
         days: 7 // Request 7 days forecast
       })
     });
-
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
     const data = await response.json();
     
     // Transform the data to match your frontend expectations
@@ -73,6 +60,26 @@ export async function getForecast(lat: number, lon: number) {
     } catch (fallbackError) {
       throw new Error('Failed to fetch forecast data from both sources');
     }
+  }
+}
+
+// You'll also need to add the missing getWeatherByCoordinates function
+export async function getWeatherByCoordinates(lat: number, lon: number) {
+  try {
+    const response = await fetch(
+      `${WEATHER_API_URL}/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`
+    );
+    const data = await response.json();
+    
+    return {
+      temperature: data.main.temp,
+      humidity: data.main.humidity,
+      windSpeed: data.wind.speed,
+      description: data.weather[0].description,
+      rainfall: data.rain ? data.rain['1h'] : 0
+    };
+  } catch (error) {
+    throw new Error('Failed to fetch weather data');
   }
 }
 
