@@ -1,13 +1,13 @@
 const WEATHER_API_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
 const WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5';
-const PYTHON_BACKEND_URL = 'http://127.0.0.1:8000';
+const BACKEND_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://nomagro.railway.app'  // Railway URL
+  : 'http://localhost:8000';             // Local development
 
-export async function getWeatherByCoordinates(lat: number, lon: number) {
-  try {
-    const response = await fetch(
-      `${WEATHER_API_URL}/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`
-    );
-    const data = await response.json();
+export async function getForecast(lat: number, lon: number) {
+  const response = await fetch(`${BACKEND_URL}/forecast?days=7`);
+  return response.json();
+}
     return {
       temperature: data.main.temp,
       humidity: data.main.humidity,
